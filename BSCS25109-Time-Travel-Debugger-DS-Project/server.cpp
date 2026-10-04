@@ -16,6 +16,7 @@
 #include <fstream>
 #include <cstdint>
 #include <cstdio>
+#include <sstream>  
 using namespace std;
 
 // ---- Constants ----
@@ -184,19 +185,78 @@ struct PendingPatch
 // PASS 0x0: READING source.bin + VALIDITY CHECK
 bool readSourceLine(ifstream &in, string &out)
 {
-    // reads the next nonblank line
+	while (getline(in, out))
+	{
+		if (!out.empty() && out.back() == '\r') 
+		{
+			out.pop_back();
+		}
+
+		if (!out.empty()) 
+		{
+			return true;
+		}
+	}
+	return false; 
 }
 string firstWord(const string &line)
 {
-    // returns first word from the input string
+	stringstream word(line);
+	string first;
+	word >> first;
+	return first;
 }
 string secondWord(const string &line)
 {
-    // returns the second word
+	stringstream word(line);
+    string first;
+    string second;
+    word >> first;
+    word >> second;
+	return second;
 }
 bool validateProgram(const char *sourcePath)
 {
-    // for each func defined there should be exactly one func_end and no nested funcs allowed - 
+    ifstream file(sourcePath, ios::binary);
+
+	if (!file.is_open())
+	{
+        cout << "error failed to open file " << endl;
+		return false;
+	}
+
+	string line;
+	bool inFunc = false;
+	while (readSourceLine(file, line))
+	{
+		string first = firstWord(line);
+        if (first == "func")
+        {
+            if (inFunc==true)
+            {
+                cout << "error nested func not allowed" << endl;
+                return false;
+            }
+            inFunc = true;
+        }
+        else if (first == "func_end")
+        {
+            if (inFunc==false)
+            {
+                cout << "error func_end without matching func" << endl;
+                return false;
+            }
+            inFunc = false;
+        }
+    }
+
+    if (inFunc == true)
+    {
+		cout << "error func without matching func_end" << endl;
+		return false;
+    }
+
+	return true;
 }
 
 // PASS 0x1: RESOLVE() -> resolve.bin
