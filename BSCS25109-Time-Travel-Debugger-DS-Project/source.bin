@@ -1,8 +1,7 @@
 func foo b
-set a 10
-add b a
+add b b
 func_end
 func main
-set k 10
+set k 3
 call foo k
 func_end
