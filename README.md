@@ -24,9 +24,11 @@ Implemented the linked-list stack which i commit
 
 
 
-06 October 2026
+07 October 2026
 
 
 ->Verifies binary file saving and structural integrity using the [offset 8B][size 4B][text] data format
 
 ->Verified the binary output to ensure offsets, string sizes, and resolved function calls are stored correctly.
+
+->implement Stage 03: Pass 0x2: Execution  then run in test.cpp and then verify it 
