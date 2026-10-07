@@ -29,3 +29,4 @@ Implemented the linked-list stack which i commit
 
 ->Verifies binary file saving and structural integrity using the [offset 8B][size 4B][text] data format
 
+->Verified the binary output to ensure offsets, string sizes, and resolved function calls are stored correctly.
