@@ -24,3 +24,8 @@ Implemented the linked-list stack which i commit
 
 
 
+06 October 2026
+
+
+->Verifies binary file saving and structural integrity using the [offset 8B][size 4B][text] data format
+
