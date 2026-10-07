@@ -3,5 +3,5 @@
     <Platform Name="x64" />
     <Platform Name="x86" />
   </Configurations>
-  <Project Path="BSCS25109-Time-Travel-Debugger-DS-Project/BSCS25109-Time-Travel-Debugger-DS-Project.vcxproj" />
+  <Project Path="BSCS25109-Time-Travel-Debugger-DS-Project/BSCS25109-Time-Travel-Debugger-DS-Project.vcxproj" Id="09adb057-c6b7-46d8-b16e-0a0a1990982e" />
 </Solution>
