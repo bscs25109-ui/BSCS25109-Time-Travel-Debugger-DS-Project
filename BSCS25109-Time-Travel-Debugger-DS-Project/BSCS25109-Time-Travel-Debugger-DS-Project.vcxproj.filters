@@ -29,5 +29,11 @@
     <None Include="test.bin">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="resolve.bin">
+      <Filter>Source Files</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="valid.txt" />
   </ItemGroup>
 </Project>
