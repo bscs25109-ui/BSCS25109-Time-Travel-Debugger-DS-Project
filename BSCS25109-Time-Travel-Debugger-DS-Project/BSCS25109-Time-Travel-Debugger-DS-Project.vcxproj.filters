@@ -32,6 +32,12 @@
     <None Include="resolve.bin">
       <Filter>Source Files</Filter>
     </None>
+    <None Include="session.tdbg">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="session.bin">
+      <Filter>Source Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Text Include="valid.txt" />

@@ -144,6 +144,8 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="resolve.bin" />
+    <None Include="session.bin" />
+    <None Include="session.tdbg" />
     <None Include="source.bin" />
     <None Include="test.bin" />
   </ItemGroup>
