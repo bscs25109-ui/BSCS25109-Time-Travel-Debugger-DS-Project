@@ -9,7 +9,7 @@
 
 //#include <unistd.h>
 //#include <sys/socket.h>
-#define _CRT_SECURE_NO_WARNINGS
+#define _CRT_SECURE_NO_WARNINGS    // stops VS code from showing warnings for functions like fopen , scanf and other
 #include <iostream>
 #include <string>
 #include <cstdint>
@@ -20,6 +20,7 @@
 #include <stdexcept>
 using namespace std;
 
+// int32_t is used for 32-bit signed integers, int64_t is used for 64-bit signed integers
 // ---- Constants ----
 const int32_t MAX_VARS_PER_FRAME = 16;
 const int32_t MAX_STACK_DEPTH = 64;
@@ -202,7 +203,7 @@ struct PendingPatch
 
 
 // PASS 0x0: READING source.bin + VALIDITY CHECK
-bool readSourceLine(ifstream &in, string &out)
+bool readSourceLine(ifstream& in, string& out)  // in this we are reading the source line from the file
 {
 	while (getline(in, out))
 	{
@@ -218,14 +219,14 @@ bool readSourceLine(ifstream &in, string &out)
 	}
 	return false; 
 }
-string firstWord(const string &line)
+string firstWord(const string& line) // in this we are getting the first word from the line
 {
 	stringstream word(line);
 	string first;
 	word >> first;
 	return first;
 }
-string secondWord(const string &line)
+string secondWord(const string& line) // in this we are getting the second word from the line
 {
 	stringstream word(line);
     string first;
@@ -234,9 +235,9 @@ string secondWord(const string &line)
     word >> second;
 	return second;
 }
-bool validateProgram(const char *sourcePath)
+bool validateProgram(const char* sourcePath) // in this we are validating the program by checking the func and func_end
 {
-    ifstream fin(sourcePath, ios::binary);
+    ifstream fin(sourcePath, ios::binary); 
 
 	if (!fin.is_open())
 	{
@@ -281,22 +282,22 @@ bool validateProgram(const char *sourcePath)
 }
 
 // PASS 0x1: RESOLVE() -> resolve.bin
-int64_t writeResolveRecord(FILE *f, int64_t offsetField, const string &text)
+int64_t writeResolveRecord(FILE* f, int64_t offsetField, const string& text) // in this we are writing the resolve record to the file
 {
-	int64_t pos = ftell(f);
-	fwrite(&offsetField, sizeof(int64_t), 1, f);
+	int64_t pos = ftell(f);       // get the current position in the file ftell returns the current file position of the given stream
+	fwrite(&offsetField, sizeof(int64_t), 1, f);  // fwrite parameters: (pointer to data, size of each element, number of elements, file pointer)
 	int32_t size = text.size();
 	fwrite(&size, sizeof(int32_t), 1, f);
-	fwrite(text.c_str(), 1, size, f);
+	fwrite(text.c_str(), 1, size, f);  
 	return pos;
 
 
 }
-int64_t readResolveRecord(FILE *f, string &outText)
+int64_t readResolveRecord(FILE* f, string& outText) // in this we are reading the resolve record from the file
 {
 	int32_t size;
 	int64_t offsetField;
-	if (fread(&offsetField, sizeof(int64_t), 1, f) != 1)
+	if (fread(&offsetField, sizeof(int64_t), 1, f) != 1) // fread parameters: (pointer to data, size of each element, number of elements, file pointer)
 	{
 		return -1;
 	}
@@ -312,7 +313,7 @@ int64_t readResolveRecord(FILE *f, string &outText)
 	}
 	return offsetField;
 }
-int64_t resolveProgram(const char* sourcePath, const char* resolveBinPath)
+int64_t resolveProgram(const char* sourcePath, const char* resolveBinPath) // in this we are resolving the program by reading the source file and writing the resolve file
 {
     FuncEntry funcArray[MAX_FUNCS];
     int32_t funcCount = 0;
@@ -341,7 +342,7 @@ int64_t resolveProgram(const char* sourcePath, const char* resolveBinPath)
         cout << "error failed to open resolve file " << endl;
         return -1;
     }
-
+	// read each line from source.bin, write to resolve.bin, and record FUNC or CALL info
     string line;
     while (readSourceLine(fin, line))
     {
@@ -366,7 +367,7 @@ int64_t resolveProgram(const char* sourcePath, const char* resolveBinPath)
     }
 
     fclose(fout);
-
+	// Now patch the CALL offsets with their target FUNC offsets
     FILE* f = fopen(resolveBinPath, "r+b");
     if (f == nullptr)
     {
@@ -374,7 +375,7 @@ int64_t resolveProgram(const char* sourcePath, const char* resolveBinPath)
         return -1;
     }
 
-
+	// for each patch, find the target functions offset and write it to the offset field
     for (int i = 0; i < patchCount; i++)
     {
         int64_t target = -1;
@@ -396,7 +397,7 @@ int64_t resolveProgram(const char* sourcePath, const char* resolveBinPath)
         fwrite(&target, sizeof(int64_t), 1, f);
     }
     fclose(f);
-
+	// find the main function's offset and return it
     for (int i = 0; i < funcCount; i++)
     {
         if (funcArray[i].funcName == "main")
@@ -408,7 +409,7 @@ int64_t resolveProgram(const char* sourcePath, const char* resolveBinPath)
 
     return -1;
 }
-// PASS 0x2: EXECUTION (tokenization happens here)
+// PASS 0x2: EXECUTION (tokenization happens here) 
 enum TokenType
 {
     KEYWORD,
@@ -420,7 +421,7 @@ struct Token
     TokenType type;
     string text;
 };
-int32_t tokenizeLine(const string &line, Token tokens[], int32_t maxTokens)
+int32_t tokenizeLine(const string& line, Token tokens[], int32_t maxTokens) // in this we are tokenizing the line into tokens so that we can easily identify the instruction, identifier and params
 {
     // first word is always a instruction keyword
     // instruction set = [func, func_end, call, set, add, sub, mul and div]
@@ -451,7 +452,7 @@ int32_t tokenizeLine(const string &line, Token tokens[], int32_t maxTokens)
 }
 
 
-Snapshot *buildSnapshot(Stack<Frame> &callStack)
+Snapshot* buildSnapshot(Stack<Frame>& callStack) // in this we are building the snapshot of the call stack so that we can record it in the timeline
 {
     // build the snapshot based on the callStack given
 	Snapshot* s = new Snapshot();
@@ -459,7 +460,7 @@ Snapshot *buildSnapshot(Stack<Frame> &callStack)
 	return s;
 }
 
-Variable* findVar(Frame& frame, const string& name)
+Variable* findVar(Frame& frame, const string& name) // in this we are finding the variable in the frame by searching in locals first and then in argv 
 {
 	// search in locals first
 	for (int i = 0; i < frame.localCount; i++)
@@ -480,7 +481,7 @@ Variable* findVar(Frame& frame, const string& name)
 	return nullptr;
 }
 
-int32_t getVarValue(Frame& frame, const string& name)
+int32_t getVarValue(Frame& frame, const string& name) // in this we are getting the value of the variable by searching in the frame and if not found then we are converting the name to integer and returning it
 {
 	Variable* v = findVar(frame, name);
 	if (v!= nullptr)
@@ -498,13 +499,14 @@ void executeProgram(const char *resolveBinPath, int64_t mainOffset, Timeline &ti
     // implementation:
     // execute line by line, and according to the keyword perform action
 
-    FILE* f = fopen(resolveBinPath, "rb");
+	FILE* f = fopen(resolveBinPath, "rb");   // open the resolve.bin file for reading  
     if (f == nullptr)
     {
         cout << "error failed to open resolve file for execution" << endl;
         return;
     }
 
+	// first we need to create a call stack to keep track of the function calls and their local variables
     Stack<Frame> callStack;
 
 
@@ -521,7 +523,7 @@ void executeProgram(const char *resolveBinPath, int64_t mainOffset, Timeline &ti
     string line;
 
     readResolveRecord(f, line);
-
+	// here below we are starting the execution of the program by reading each line from the resolve.bin file 
     while (true)
     {
         int64_t target = readResolveRecord(f, line);
@@ -535,7 +537,7 @@ void executeProgram(const char *resolveBinPath, int64_t mainOffset, Timeline &ti
         string text = tokens[0].text;
         Frame& top = callStack.peek();
 
-
+		// check the keyword and perform the action 
         if (text == "set")
         {
             Variable* v = findVar(top, tokens[1].text);
@@ -589,7 +591,8 @@ void executeProgram(const char *resolveBinPath, int64_t mainOffset, Timeline &ti
                 cout << "error argument count mismatch in function call" << endl;
                 break;
             }
-
+			// here weare creating a new frame for the function call and pushing it onto the call stack
+			//so that we can keep track of the function calls and their local variables
             Frame nframe;
             nframe.func_name = functokens[1].text;
             nframe.argc = argcount;
@@ -621,7 +624,7 @@ void executeProgram(const char *resolveBinPath, int64_t mainOffset, Timeline &ti
             int32_t index = callStack.depth() - 1;
             Frame finalFrame = callStack.pop();
             Frame& callerFrame = callStack.peek();
-
+			// here we are updating the caller frame's variables with the values of the callee frame's variables
             for (int i = 0; i < finalFrame.argc; i++)
             {
                 string callerName = argSource[index][i];
@@ -634,6 +637,7 @@ void executeProgram(const char *resolveBinPath, int64_t mainOffset, Timeline &ti
             }
             fseek(f, finalFrame.returnLine, SEEK_SET);
         }
+		// now we are building the snapshot of the call stack and recording it in the timeline
         timeline.record(buildSnapshot(callStack));
 
     }
@@ -644,7 +648,7 @@ void executeProgram(const char *resolveBinPath, int64_t mainOffset, Timeline &ti
 
 // PASS 0x3: SERIALIZE TIMELINE
 
-void writeHeader(FILE* f, const TTDBHeader& h)
+void writeHeader(FILE* f, const TTDBHeader& h) 
 {
 	fwrite(h.magic, 1, 4, f);
 	fwrite(&h.version, sizeof(int32_t), 1, f);
@@ -652,19 +656,20 @@ void writeHeader(FILE* f, const TTDBHeader& h)
 	fwrite(&h.indexOffset, sizeof(int64_t), 1, f);
 }
 
-void writeString(FILE* f, const string& s)
+void writeString(FILE* f, const string& s) 
 {
 	int32_t size = s.size();
 	fwrite(&size, sizeof(int32_t), 1, f);
 	fwrite(s.c_str(), 1, size, f);
 }
-void writeVariable(FILE* f, const Variable& v)
+void writeVariable(FILE* f, const Variable& v)            
 {
 	writeString(f, v.name);
 	fwrite(&v.value, sizeof(int32_t), 1, f);
 }
-
-void writeFrame(FILE* f, const Frame& frame)
+// writeFrame writes a Frame to the file, including its function name, argument count, arguments, return line, local variable count, and local variables
+// why? because we need to serialize the Frame structure to the file so that we can later reconstruct it when reading the file
+void writeFrame(FILE* f, const Frame& frame) 
 {
 	writeString(f, frame.func_name);
 	fwrite(&frame.argc, sizeof(int32_t), 1, f);
@@ -679,7 +684,8 @@ void writeFrame(FILE* f, const Frame& frame)
 		writeVariable(f, frame.locals[i]);
 	}
 }
-
+// writeSnapshot writes a Snapshot to the file, including its stack depth and the frames in the call stack
+//why? because we need to serialize the Snapshot structure to the file so that we can later reconstruct it when reading the file
 void  writeSnapshot(FILE* f, const Snapshot& snapshot)
 {
 	fwrite(&snapshot.stackDepth, sizeof(int32_t), 1, f);
@@ -688,6 +694,8 @@ void  writeSnapshot(FILE* f, const Snapshot& snapshot)
 		writeFrame(f, snapshot.callStack[i]);
 	}
 }
+
+// writeTdbg writes the Timeline to the tdbg file, including the header, snapshots, and index array
 void writeTdbg(Timeline &timeline, const char *tdbgPath)
 {
     // placeholder for header
@@ -733,7 +741,7 @@ void writeTdbg(Timeline &timeline, const char *tdbgPath)
 	delete[] index;
 }
 // main section
-int32_t main()
+int32_t main() // in this we are validating the source.bin file, resolving the program, executing the program and writing the timeline to the tdbg file
 {
 
     if (!validateProgram("source.bin"))
@@ -751,3 +759,71 @@ int32_t main()
 
     return 0;
 }
+
+
+// for my understanding 
+//frame and stack
+// each functiion gets its own sheet for its local variables and arguments
+//when a function is called, a new sheet is created on top and pushed onto the stack
+//when work is done, the sheet is popped off and discarded
+
+//snapshot and timeline
+// snapshot is a copy of the whole pile of sheets at a given moment in time
+//the photos are stored in a timeline, which is a doubly linked list of snapshots so we can move back and forth in time
+
+//index
+//photos have variable sizes, so we need an index to know where each photo starts in the file
+// if we have 1000 snapshots, we need an array of 1000 offsets to know where each snapshot starts in the file
+// the index is stored at the end of the file, and the header contains the offset of the index
+
+//example 
+
+// func foo b         main set k = 10
+// set a 10           main calls foo with k   -> b =10
+// add b a            foo sets a = 10 then b = 10+10 =20
+// func_end           foo end  20 goes back to k  so k = 20
+// func main
+// set k = 10         5 photos taken saved in session.tdbg
+//call foo k
+//func_end
+
+//small example and tell how it save the in.tdbg
+
+// func main
+// set k = 5
+// add k 10
+// func_end
+
+// photo 1 
+//after set k = 5    stack depth = 1, main frame, k=5
+// photo 2
+// after add k 10    stack depth = 1, main frame, k=15
+
+// now file have header, 2 snapshots, index array of 2 offsets 
+
+// writeTdbg function 
+
+// 54 54 44 42 | 01 00 00 00 | 02 00 00 00 | 00 00 00 00 00 00 00 00 |   
+// "TTDB"      | version 1 | stepCount = 2 | indexOffset = 0 (placeholder) |
+
+// bytes 0 to 19 so file start at 20th byte
+
+
+// write snapshot 1
+// 01 00 00 00                     depth = 1 
+// 04 00 00 00 6D 61 69 6E         func_name = "main" and size = 4
+// 00 00 00 00                     argc = 0 no arguments
+// FF FF FF FF                     returnLine = -1
+// 01 00 00 00                     localCount = 1
+// 01 00 00 00 6B                  var name = "k" and size = 1
+// 05 00 00 00                     value = 5
+
+// like that next snapshot 2 will be written and then index array will be written at the end of the file and then header will be updated with the index offse
+
+// so the final file will look like this
+
+//bytes       content        meaning
+// 0-19        header          "TTDB" version 1 stepCount = 2 indexOffset = 0 (placeholder)
+// 20-53       snapshot 1      depth = 1, main frame, k=5
+// 54-85       snapshot 2      depth = 1, main frame, k=15
+// 86-101      index array      offset of snapshot 1 = 20, offset of snapshot 2 = 54
