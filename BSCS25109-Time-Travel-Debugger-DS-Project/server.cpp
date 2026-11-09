@@ -367,7 +367,7 @@ int64_t resolveProgram(const char* sourcePath, const char* resolveBinPath) // in
     }
 
     fclose(fout);
-	// Now patch the CALL offsets with their target FUNC offsets
+	// now patch the CALL offsets with their target FUNC offsets
     FILE* f = fopen(resolveBinPath, "r+b");
     if (f == nullptr)
     {
